@@ -68,11 +68,24 @@
     </div>
 
     <script>
-        // ניקוי אוטומטי של השדה ברגע שנוגעים בו
-        const inputs = document.querySelectorAll('input');
-        inputs.forEach(input => {
-            input.addEventListener('focus', function() { 
-                this.value = ''; 
+        // ניקוי אוטומטי של השדה ברגע שנוגעים בו (גם הערך וגם הרקע)
+        document.addEventListener("DOMContentLoaded", () => {
+            const inputs = document.querySelectorAll('input[type="number"]');
+            inputs.forEach(input => {
+                // שומרים את הערך המקורי בצד
+                input.dataset.origPlaceholder = input.placeholder;
+                
+                input.addEventListener('focus', function() { 
+                    this.placeholder = ''; // מעלים את מספר הרקע
+                    this.value = '';       // מוחק את המספר שהוקלד קודם
+                });
+
+                input.addEventListener('blur', function() { 
+                    // אם יצאנו מהשבצת ולא כתבנו כלום, נחזיר את מספר הרקע
+                    if(this.value === '') {
+                        this.placeholder = this.dataset.origPlaceholder;
+                    }
+                });
             });
         });
 
@@ -130,3 +143,5 @@
     </script>
 </body>
 </html>
+
+
