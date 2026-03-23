@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>מחשבון שקילה - Keter Deco</title>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <style>
+        @import url('[https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap](https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap)');
+        body { font-family: 'Assistant', sans-serif; background-color: #020617; color: #f1f5f9; -webkit-tap-highlight-color: transparent; }
+        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .glass-panel { background: linear-gradient(145deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 italic">
+    <div class="w-full max-w-md glass-panel rounded-[2rem] p-6 border border-slate-700/50">
+        <div class="text-center mb-6 border-b border-slate-700/50 pb-4">
+            <h1 class="text-3xl font-black text-cyan-400">מחשבון שקילה (GSM)</h1>
+            <p class="text-slate-400 text-sm mt-1">אוניברסלי לכלל חומרי הציפוי<br>(פריימר, לבן, לבן פריימר, לכה)</p>
+        </div>
+        <div class="space-y-5">
+            <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-700/30">
+                <p class="text-[10px] text-slate-500 mb-3 font-bold uppercase tracking-widest">הגדרת יעד תקינות (אופציונלי)</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="number" id="min" class="input-f w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white text-center text-sm focus:border-cyan-500 outline-none" placeholder="מינימום">
+                    <input type="number" id="max" class="input-f w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white text-center text-sm focus:border-cyan-500 outline-none" placeholder="מקסימום">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="block text-slate-400 text-xs font-bold px-1 text-right">אורך (ס"מ)</label>
+                    <input type="number" id="L" class="input-f w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-white text-center font-mono text-xl focus:border-cyan-500 outline-none" placeholder="120">
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-slate-400 text-xs font-bold px-1 text-right">רוחב (ס"מ)</label>
+                    <input type="number" id="W" class="input-f w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-white text-center font-mono text-xl focus:border-cyan-500 outline-none" placeholder="80">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="block text-slate-400 text-xs font-bold px-1 text-right">משקל לפני (g)</label>
+                    <input type="number" step="0.1" id="w1" class="input-f w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-white text-center font-mono text-xl focus:border-cyan-500 outline-none" placeholder="0.0">
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-slate-400 text-xs font-bold px-1 text-right">משקל אחרי (g)</label>
+                    <input type="number" step="0.1" id="w2" class="input-f w-full bg-slate-800 border border-cyan-900/50 rounded-xl p-4 text-white text-center font-mono text-xl focus:border-cyan-400 outline-none" placeholder="0.0">
+                </div>
+            </div>
+            <button onclick="calc()" class="w-full mt-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-black text-xl py-5 rounded-2xl shadow-lg active:scale-95 transition-all">חשב תוצאה</button>
+        </div>
+        <div id="res-box" class="mt-6 hidden flex-col items-center justify-center border-2 border-slate-700 rounded-3xl p-6 bg-slate-900/50 text-center">
+            <p id="t-dis" class="text-slate-500 font-bold mb-1 uppercase text-[10px] hidden">טווח יעד: <span id="t-range"></span></p>
+            <div class="flex items-baseline gap-1 my-1">
+                <span id="val" class="text-7xl font-black text-cyan-400">0.0</span>
+                <span class="text-slate-500 font-bold text-lg">g/m²</span>
+            </div>
+            <span id="msg" class="mt-2 font-bold text-sm px-6 py-2 rounded-full bg-slate-800 text-slate-400 hidden"></span>
+            <button onclick="share()" class="mt-6 w-full bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/30 font-bold py-3 rounded-xl flex justify-center items-center gap-2 text-sm">שלח תוצאה בוואטסאפ</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll('.input-f').forEach(i => {
+                i.addEventListener('focus', function() { this.value = ''; });
+            });
+        });
+        let curR = "", curS = "";
+        function calc() {
+            const L = parseFloat(document.getElementById('L').value), W = parseFloat(document.getElementById('W').value),
+                  w1 = parseFloat(document.getElementById('w1').value), w2 = parseFloat(document.getElementById('w2').value),
+                  mi = parseFloat(document.getElementById('min').value), ma = parseFloat(document.getElementById('max').value),
+                  rb = document.getElementById('res-box'), v = document.getElementById('val'), m = document.getElementById('msg'),
+                  td = document.getElementById('t-dis'), tr = document.getElementById('t-range');
+            rb.classList.remove('hidden'); rb.className = "mt-6 w-full flex flex-col items-center justify-center border-2 border-slate-700 rounded-3xl p-6 bg-slate-900/50 text-center";
+            v.className = "text-7xl font-black text-cyan-400"; m.classList.add('hidden'); td.classList.add('hidden');
+            if(!L || !W || isNaN(w1) || isNaN(w2) || w1 >= w2) { v.innerText = "ERR"; m.innerText = "נתונים לא תקינים"; m.classList.remove('hidden'); return; }
+            const g = (w2 - w1) / ((L/100)*(W/100)); curR = g.toFixed(1); v.innerText = curR;
+            if(!isNaN(mi) && !isNaN(ma)) {
+                td.classList.remove('hidden'); tr.innerText = mi + " - " + ma; m.classList.remove('hidden');
+                if(g >= mi && g <= ma) { rb.classList.add('border-green-500'); v.classList.replace('text-cyan-400', 'text-green-400'); m.className = "mt-2 font-bold text-sm px-6 py-2 rounded-full bg-green-900/40 text-green-300"; m.innerText = "תקין ✅"; curS = "תקין (PASS)"; }
+                else { rb.classList.add('border-red-500'); v.classList.replace('text-cyan-400', 'text-red-400'); m.className = "mt-2 font-bold text-sm px-6 py-2 rounded-full bg-red-900/40 text-red-300"; m.innerText = g < mi ? "חסר חומר ❌" : "עודף חומר ❌"; curS = g < mi ? "חריגה למטה" : "חריגה למעלה"; }
+            } else { curS = "ללא יעד"; }
+        }
+        function share() {
+            const txt = `*בקרת איכות - Keter Deco*\nתוצאה: ${curR} g/m²\nסטטוס: ${curS}`;
+            if(navigator.share) navigator.share({text: txt}); else window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`);
+        }
+    </script>
+</body>
+</html>
